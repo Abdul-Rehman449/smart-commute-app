@@ -35,43 +35,34 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 h-screen w-screen overflow-hidden font-sans transition-colors duration-500 text-slate-800 dark:text-white">
 
-    <button onclick="toggleTheme()" class="absolute top-4 right-4 z-[9999] bg-white dark:bg-slate-800 p-3 rounded-full shadow-lg hover:scale-110 transition-transform">
+    <button onclick="toggleTheme()" id="themeIconBtn" class="absolute top-4 right-4 z-[9999] bg-white dark:bg-slate-800 p-3 rounded-full shadow-lg hover:scale-110 transition-transform">
         <span id="themeIcon" class="text-xl">🌙</span>
     </button>
 
     <div id="homeScreen" class="absolute inset-0 z-50 flex items-center justify-center bg-slate-50 dark:bg-slate-900 bg-pattern p-4 transition-opacity duration-500">
         <div class="glass p-8 rounded-[30px] shadow-2xl w-full max-w-lg flex flex-col gap-6 relative">
-            
             <div class="text-center">
                 <h1 class="text-3xl font-black text-blue-600 dark:text-blue-400 mb-2 tracking-tight">Smart Commute</h1>
                 <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Where are you going today?</p>
             </div>
-
-            <div class="flex flex-wrap items-center gap-2" id="favoritesRow">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider w-full">Recent Routes:</span>
-            </div>
-
+            <div class="flex flex-wrap items-center gap-2" id="favoritesRow"></div>
             <div class="flex flex-col gap-4 relative">
                 <div class="relative w-full flex gap-2">
                     <button onclick="useMyLocation()" class="w-12 h-12 flex items-center justify-center bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-2xl hover:bg-blue-100 transition shadow-sm shrink-0" title="My Location">📍</button>
-                    <input type="text" id="origin" placeholder="Pick-up location" class="w-full h-12 px-4 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 border border-slate-200 rounded-2xl text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition shadow-sm font-medium placeholder-slate-400">
+                    <input type="text" id="origin" placeholder="Pick-up location" class="w-full h-12 px-4 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 border border-slate-200 rounded-2xl text-sm outline-none shadow-sm font-medium">
                     <div id="origin-suggestions" class="absolute top-full left-14 mt-2 w-[calc(100%-3.5rem)] bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-xl hidden max-h-48 overflow-y-auto z-[1000]"></div>
                 </div>
-
                 <div class="relative w-full">
-                    <input type="text" id="dest" placeholder="Drop-off location" class="w-full h-12 px-4 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 border border-slate-200 rounded-2xl text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition shadow-sm font-medium placeholder-slate-400">
+                    <input type="text" id="dest" placeholder="Drop-off location" class="w-full h-12 px-4 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 border border-slate-200 rounded-2xl text-sm outline-none shadow-sm font-medium">
                     <div id="dest-suggestions" class="absolute top-full left-0 mt-2 w-full bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-xl hidden max-h-48 overflow-y-auto z-[1000]"></div>
                 </div>
-
                 <div class="flex gap-2 h-12">
                     <select id="vehicle" class="w-1/3 px-4 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 border border-slate-200 rounded-2xl text-sm outline-none shadow-sm cursor-pointer font-medium">
                         <option value="driving">Car 🚗</option>
                         <option value="cycling">Bike 🏍️</option>
                     </select>
-                    <button onclick="saveFavorite()" class="w-12 flex items-center justify-center bg-yellow-50 dark:bg-yellow-900/20 text-yellow-500 border border-yellow-200 dark:border-yellow-800 rounded-2xl hover:bg-yellow-100 transition shadow-sm" title="Save Route">⭐</button>
-                    <button onclick="checkTraffic()" id="mainGoBtn" class="flex-1 bg-blue-600 text-white rounded-2xl font-black hover:bg-blue-700 transition shadow-lg shadow-blue-500/30 text-sm tracking-wide">
-                        FIND ROUTE
-                    </button>
+                    <button onclick="saveFavorite()" class="w-12 flex items-center justify-center bg-yellow-50 dark:bg-yellow-900/20 text-yellow-500 border border-yellow-200 dark:border-yellow-800 rounded-2xl hover:bg-yellow-100 transition shadow-sm">⭐</button>
+                    <button onclick="checkTraffic()" id="mainGoBtn" class="flex-1 bg-blue-600 text-white rounded-2xl font-black hover:bg-blue-700 transition shadow-lg shadow-blue-500/30 text-sm tracking-wide">FIND ROUTE</button>
                 </div>
             </div>
         </div>
@@ -79,69 +70,50 @@
 
     <div id="mapScreen" class="absolute inset-0 z-0 hidden opacity-0 transition-opacity duration-500">
         <div id="map" class="absolute inset-0 z-0"></div>
-
         <div class="absolute top-4 left-4 right-16 z-20 glass rounded-2xl shadow-lg p-3 flex items-center justify-between">
             <div class="flex items-center gap-3 overflow-hidden">
                 <button onclick="goBackToHome()" class="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl hover:bg-slate-200 transition text-sm">❌</button>
                 <div class="truncate text-xs font-bold text-slate-600 dark:text-slate-300">
-                    <span id="displayOrigin" class="text-blue-500">Origin</span> 
-                    <span class="mx-1">➔</span> 
-                    <span id="displayDest" class="text-green-500">Destination</span>
+                    <span id="displayOrigin" class="text-blue-500">Origin</span> <span class="mx-1">➔</span> <span id="displayDest" class="text-green-500">Destination</span>
                 </div>
             </div>
-            <button id="voiceToggle" onclick="toggleVoice()" class="ml-2 text-blue-600 bg-blue-50 dark:bg-slate-700 px-3 py-1.5 rounded-xl transition shadow-sm font-bold text-[10px] whitespace-nowrap">
-                🔊 Voice: ON
-            </button>
+            <button id="voiceToggle" onclick="toggleVoice()" class="ml-2 text-blue-600 bg-blue-50 dark:bg-slate-700 px-3 py-1.5 rounded-xl font-bold text-[10px]">🔊 Voice: ON</button>
         </div>
 
         <div class="absolute bottom-4 left-4 right-4 z-20 glass rounded-[30px] shadow-2xl p-4 flex flex-col gap-3 max-h-[45vh]">
-            <div id="alertArea" class="p-2 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl text-xs font-bold hidden text-center animate-pulse">
-                ⚠️ Alert: <span id="hurdleText"></span>
-            </div>
-
+            <div id="alertArea" class="p-2 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl text-xs font-bold hidden text-center animate-pulse">⚠️ Alert: <span id="hurdleText"></span></div>
             <div class="flex gap-3 overflow-x-auto pb-2 items-stretch" style="scrollbar-width: none;">
-                <div class="min-w-[220px] bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col justify-between shrink-0 shadow-sm">
+                <div class="min-w-[220px] bg-white dark:bg-slate-800 p-4 rounded-2xl flex flex-col justify-between shrink-0 shadow-sm">
                     <div class="flex justify-between items-center mb-1">
-                        <div class="text-center"><p class="text-[9px] text-slate-400 font-bold uppercase">Speed</p><p id="speedText" class="text-lg font-black text-blue-600">0</p></div>
+                        <div class="text-center"><p class="text-[9px] text-slate-400 font-bold uppercase">Speed</p><p id="speedText" class="text-lg font-black text-blue-600">0 <span class="text-[10px] font-normal">km/h</span></p></div>
                         <div class="text-center"><p class="text-[9px] text-slate-400 font-bold uppercase">Dist</p><p id="distText" class="text-lg font-black text-slate-700 dark:text-white">--</p></div>
                         <div class="text-center"><p class="text-[9px] text-slate-400 font-bold uppercase">ETA</p><p id="timeText" class="text-lg font-black text-green-500">--</p></div>
                     </div>
                 </div>
-
-                <div class="min-w-[250px] bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl shrink-0 shadow-sm flex flex-col">
+                <div class="min-w-[250px] bg-white dark:bg-slate-800 p-4 rounded-2xl shrink-0 shadow-sm flex flex-col">
                     <h3 class="text-[9px] font-black text-slate-400 mb-2 uppercase">Next Steps</h3>
                     <div id="stepsList" class="space-y-2 text-[11px] text-slate-600 dark:text-slate-300 overflow-y-auto h-[60px] pr-2"></div>
                 </div>
-
-                <div id="weatherBox" class="min-w-[280px] bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl hidden shrink-0 shadow-sm">
+                <div id="weatherBox" class="min-w-[280px] bg-white dark:bg-slate-800 p-4 rounded-2xl hidden shrink-0 shadow-sm">
                     <div class="flex justify-between gap-4 h-full">
-                        <div class="w-1/2 border-r border-slate-100 dark:border-slate-700 pr-2">
-                            <h4 class="text-[8px] font-black text-blue-500 mb-1 uppercase">Pick-up Weather</h4>
-                            <div id="originWeather" class="flex gap-1 overflow-x-auto"></div>
-                        </div>
-                        <div class="w-1/2 pl-1">
-                            <h4 class="text-[8px] font-black text-green-500 mb-1 uppercase">Drop-off Weather</h4>
-                            <div id="destWeather" class="flex gap-1 overflow-x-auto"></div>
-                        </div>
+                        <div class="w-1/2 border-r border-slate-100 dark:border-slate-700 pr-2"><h4 class="text-[8px] font-black text-blue-500 mb-1 uppercase">Pick-up Weather</h4><div id="originWeather" class="flex gap-1 overflow-x-auto"></div></div>
+                        <div class="w-1/2 pl-1"><h4 class="text-[8px] font-black text-green-500 mb-1 uppercase">Drop-off Weather</h4><div id="destWeather" class="flex gap-1 overflow-x-auto"></div></div>
                     </div>
                 </div>
             </div>
-
-            <button id="startBtn" class="w-full py-3.5 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl text-sm font-black shadow-lg hover:bg-slate-800 transition transform active:scale-95 tracking-wide">
-                START ENGINE
-            </button>
+            <button id="startBtn" class="w-full py-3.5 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl text-sm font-black shadow-lg hover:bg-slate-800 transition transform active:scale-95 tracking-wide">▶ START ENGINE</button>
         </div>
     </div>
 
-    <div id="toast" class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-2xl shadow-2xl font-black text-sm flex items-center gap-2">
-        ✨ <span id="toastMsg">Action successful!</span>
-    </div>
+    <div id="toast" class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-2xl shadow-2xl font-black text-sm flex items-center gap-2">✨ <span id="toastMsg">Success!</span></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
     
     <script>
         let isDark = false;
+        let watchId = null; // Asli GPS tracker ki ID
+        
         function toggleTheme() {
             isDark = !isDark;
             document.documentElement.classList.toggle('dark');
@@ -150,8 +122,7 @@
 
         var map = L.map('map', { zoomControl: false }).setView([30.3753, 69.3451], 5); 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        var routingControl, vehicleMarker, userMarker;
-        var userIcon = L.divIcon({ className: '', html: "<div class='user-location-dot'></div>", iconSize: [18, 18], iconAnchor: [9, 9] });
+        var routingControl, vehicleMarker;
 
         function showMapScreen() {
             document.getElementById('homeScreen').classList.add('opacity-0');
@@ -164,8 +135,11 @@
         }
 
         function goBackToHome() {
+            // Agar tracking chal rahi thi toh usay band karo
+            if(watchId) navigator.geolocation.clearWatch(watchId);
             if(vehicleMarker) map.removeLayer(vehicleMarker);
             if(routingControl) map.removeControl(routingControl);
+            
             document.getElementById('mapScreen').classList.add('opacity-0');
             setTimeout(() => {
                 document.getElementById('mapScreen').classList.add('hidden');
@@ -180,43 +154,17 @@
         function toggleVoice() {
             isVoiceEnabled = !isVoiceEnabled;
             const btn = document.getElementById('voiceToggle');
-            if (isVoiceEnabled) {
-                btn.innerHTML = "🔊 Voice: ON";
-                btn.className = "ml-2 text-blue-600 bg-blue-50 dark:bg-slate-700 px-3 py-1.5 rounded-xl transition shadow-sm font-bold text-[10px] whitespace-nowrap";
-            } else {
-                btn.innerHTML = "🔇 Voice: OFF";
-                btn.className = "ml-2 text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl transition shadow-sm font-bold text-[10px] whitespace-nowrap";
-                window.speechSynthesis.cancel();
-            }
+            if (isVoiceEnabled) { btn.innerHTML = "🔊 Voice: ON"; btn.classList.remove('text-slate-500', 'bg-slate-100'); btn.classList.add('text-blue-600', 'bg-blue-50'); } 
+            else { btn.innerHTML = "🔇 Voice: OFF"; btn.classList.remove('text-blue-600', 'bg-blue-50'); btn.classList.add('text-slate-500', 'bg-slate-100'); window.speechSynthesis.cancel(); }
         }
         function speakVoice(text) {
-            if (!isVoiceEnabled) return;
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); 
-                let msg = new SpeechSynthesisUtterance(text);
-                msg.rate = 1.0; msg.pitch = 1.1; msg.lang = 'en-US';
-                window.speechSynthesis.speak(msg);
-            }
+            if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel(); 
+            let msg = new SpeechSynthesisUtterance(text);
+            msg.rate = 1.0; msg.pitch = 1.1; msg.lang = 'en-US';
+            window.speechSynthesis.speak(msg);
         }
 
-        function loadFavorites() {
-            const favs = JSON.parse(localStorage.getItem('smartCommuteFavs')) || [];
-            const container = document.getElementById('favoritesRow');
-            if (favs.length === 0) { container.innerHTML = `<span class="text-xs font-bold text-slate-400 uppercase tracking-wider w-full">Recent Routes: None</span>`; return; }
-            let html = `<span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Recent:</span>`;
-            favs.forEach(f => { html += `<button onclick="setRoute('${f.origin}', '${f.dest}')" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:border-blue-500 transition shadow-sm hover-lift">${f.origin.split(',')[0]} ➔ ${f.dest.split(',')[0]}</button>`; });
-            container.innerHTML = html;
-        }
-        function setRoute(o, d) { document.getElementById('origin').value = o; document.getElementById('dest').value = d; checkTraffic(); }
-        function saveFavorite() {
-            const o = document.getElementById('origin').value; const d = document.getElementById('dest').value;
-            if(!o || !d) { showToast("Enter Origin & Dest first!", true); return; }
-            let favs = JSON.parse(localStorage.getItem('smartCommuteFavs')) || [];
-            favs.push({origin: o, dest: d});
-            if(favs.length > 5) favs.shift(); 
-            localStorage.setItem('smartCommuteFavs', JSON.stringify(favs));
-            loadFavorites(); showToast("Route Added to Recent!");
-        }
         function showToast(msg, isError = false) {
             const toast = document.getElementById('toast');
             document.getElementById('toastMsg').innerText = msg;
@@ -224,8 +172,8 @@
             toast.classList.add('show-toast');
             setTimeout(() => toast.classList.remove('show-toast'), 3000);
         }
-        loadFavorites();
 
+        // Search logic
         let searchTimeout;
         async function handleSearch(e, type) {
             clearTimeout(searchTimeout);
@@ -234,7 +182,6 @@
             if (val.length < 3) { suggBox.classList.add('hidden'); return; }
             searchTimeout = setTimeout(async () => {
                 try {
-                    // LINK UPDATED FOR VERCEL
                     const res = await fetch(`/search?q=${val}`);
                     const data = await res.json();
                     if (data.length > 0) {
@@ -250,10 +197,6 @@
         function selectLocation(type, name) { document.getElementById(type).value = name; document.getElementById(`${type}-suggestions`).classList.add('hidden'); }
         document.getElementById('origin').addEventListener('input', (e) => handleSearch(e, 'origin'));
         document.getElementById('dest').addEventListener('input', (e) => handleSearch(e, 'dest'));
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#origin') && !e.target.closest('#origin-suggestions')) document.getElementById('origin-suggestions').classList.add('hidden');
-            if (!e.target.closest('#dest') && !e.target.closest('#dest-suggestions')) document.getElementById('dest-suggestions').classList.add('hidden');
-        });
 
         function useMyLocation() {
             const originInput = document.getElementById('origin'); originInput.value = "Locating... ⏳";
@@ -265,36 +208,8 @@
                         const data = await res.json();
                         originInput.value = data.address.city || data.address.town || "My Location";
                     } catch(e) { originInput.value = "My Location"; }
-                });
+                }, () => { originInput.value = "Failed to get location"; }, { enableHighAccuracy: true });
             }
-        }
-
-        var popup = L.popup({className: 'custom-popup'});
-        map.on('contextmenu', function(e) { 
-            popup.setLatLng(e.latlng)
-                .setContent(`
-                    <div class="text-center p-1">
-                        <p class="font-bold text-gray-800 mb-2 text-xs">Set this location as:</p>
-                        <button onclick="setFromMap('origin', ${e.latlng.lat}, ${e.latlng.lng})" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold mr-1 hover:bg-blue-700">Pick-up</button>
-                        <button onclick="setFromMap('dest', ${e.latlng.lat}, ${e.latlng.lng})" class="bg-green-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-600">Drop-off</button>
-                    </div>
-                `).openOn(map);
-        });
-
-        async function setFromMap(type, lat, lng) {
-            document.getElementById(type).value = "Fetching address... ⏳";
-            map.closePopup();
-            try {
-                let res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-                let data = await res.json();
-                document.getElementById(type).value = data.address.city || data.address.town || data.address.village || data.display_name.split(',')[0];
-            } catch(e) { document.getElementById(type).value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`; }
-        }
-
-        function createWeatherHTML(data) {
-            let html = `<div class="text-center bg-slate-50 dark:bg-slate-700 rounded-lg p-1.5 min-w-[45px]"><p class="text-[7px] font-bold text-slate-400">NOW</p><p class="text-lg">${data.current_icon}</p><p class="text-[10px] font-black">${data.current_temp}°</p></div>`;
-            data.forecast.slice(0,2).forEach(f => { html += `<div class="text-center p-1.5 min-w-[45px] opacity-60"><p class="text-[7px] font-bold text-slate-400">${f.time}</p><p class="text-lg">${f.icon}</p><p class="text-[10px] font-bold">${f.temp}°</p></div>`; });
-            return html;
         }
 
         async function checkTraffic() {
@@ -302,29 +217,25 @@
             const dest = document.getElementById('dest').value;
             const vehicle = document.getElementById('vehicle').value;
 
-            if(!origin || !dest) { showToast("Enter locations to find route!", true); return; }
+            if(!origin || !dest) { showToast("Enter locations!", true); return; }
 
             const mainBtn = document.getElementById('mainGoBtn');
-            mainBtn.innerHTML = "Fetching... ⏳";
-            mainBtn.disabled = true;
+            mainBtn.innerHTML = "Fetching... ⏳"; mainBtn.disabled = true;
 
-            // LINK UPDATED FOR VERCEL
             const res = await fetch(`/get_route?origin=${origin}&destination=${dest}`);
             const data = await res.json();
 
             if (data.status === "success") {
                 document.getElementById('displayOrigin').innerText = origin.split(',')[0].substring(0, 15);
                 document.getElementById('displayDest').innerText = dest.split(',')[0].substring(0, 15);
-
                 showMapScreen();
 
                 if(routingControl) map.removeControl(routingControl);
                 if(vehicleMarker) map.removeLayer(vehicleMarker);
 
                 const startBtn = document.getElementById('startBtn');
-                startBtn.disabled = false;
-                startBtn.innerHTML = "▶ START ENGINE";
-                startBtn.className = "w-full py-3.5 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl text-sm font-black shadow-lg hover:bg-slate-800 transition transform active:scale-95 tracking-wide";
+                startBtn.disabled = false; startBtn.innerHTML = "▶ START REAL DRIVE";
+                startBtn.className = "w-full py-3.5 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl text-sm font-black shadow-lg hover:bg-slate-800 transition tracking-wide";
 
                 routingControl = L.Routing.control({
                     waypoints: [L.latLng(data.origin_coords.lat, data.origin_coords.lon), L.latLng(data.dest_coords.lat, data.dest_coords.lon)],
@@ -338,85 +249,95 @@
                     const summary = route.summary;
                     
                     let dist_km = (summary.totalDistance/1000).toFixed(1);
-                    let total_minutes = Math.round(summary.totalTime/60);
-                    let hours = Math.floor(total_minutes / 60); let mins = total_minutes % 60;
-                    let time_str = hours > 0 ? `${hours}<span class="text-[10px] font-normal">h</span> ${mins}<span class="text-[10px] font-normal">m</span>` : `${mins}<span class="text-[10px] font-normal">m</span>`;
-
                     document.getElementById('distText').innerHTML = `${dist_km} <span class="text-[10px] font-normal">km</span>`;
-                    document.getElementById('timeText').innerHTML = time_str;
-
-                    if(data.hurdle) {
-                        document.getElementById('alertArea').classList.remove('hidden');
-                        document.getElementById('hurdleText').innerText = data.hurdle + " detected!";
-                        speakVoice(`Heads up. Traffic sensor indicates ${data.hurdle} ahead.`);
-                    } else { document.getElementById('alertArea').classList.add('hidden'); }
+                    document.getElementById('timeText').innerHTML = `${Math.round(summary.totalTime/60)} <span class="text-[10px] font-normal">min</span>`;
 
                     let stepsHtml = "";
-                    route.instructions.forEach((instr, idx) => { 
-                        stepsHtml += `<div class='flex gap-2 items-start border-b border-slate-50 dark:border-slate-700 pb-1.5'><div class="bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 rounded w-4 h-4 flex items-center justify-center text-[8px] font-black shrink-0 mt-0.5">${idx+1}</div><span class="font-medium">${instr.text}</span></div>`; 
-                    });
+                    route.instructions.forEach((instr, idx) => { stepsHtml += `<div class='flex gap-2 items-start border-b border-slate-50 dark:border-slate-700 pb-1.5'><div class="bg-blue-50 dark:bg-slate-700 text-blue-600 rounded w-4 h-4 flex items-center justify-center text-[8px] font-black shrink-0 mt-0.5">${idx+1}</div><span class="font-medium">${instr.text}</span></div>`; });
                     document.getElementById('stepsList').innerHTML = stepsHtml;
 
+                    // Click hone par Real-Time GPS chalayen
                     startBtn.onclick = () => {
-                        speakVoice(`Starting engine. Route set to ${dest}. Let's go!`);
-                        simulateJourney(route, vehicle, startBtn);
+                        speakVoice(`Starting real-time tracking to ${dest}. Drive safely.`);
+                        startRealDrive(data.dest_coords.lat, data.dest_coords.lon, vehicle, startBtn);
                     };
-
-                    try {
-                        // LINKS UPDATED FOR VERCEL
-                        const [originRes, destRes] = await Promise.all([
-                            fetch(`/get_weather?lat=${data.origin_coords.lat}&lon=${data.origin_coords.lon}`),
-                            fetch(`/get_weather?lat=${data.dest_coords.lat}&lon=${data.dest_coords.lon}`)
-                        ]);
-                        const oData = await originRes.json(), dData = await destRes.json();
-                        if (oData.status === "success") {
-                            document.getElementById('weatherBox').classList.remove('hidden');
-                            document.getElementById('originWeather').innerHTML = createWeatherHTML(oData);
-                            document.getElementById('destWeather').innerHTML = createWeatherHTML(dData);
-                        }
-                    } catch(err) {}
                 });
             } else {
-                mainBtn.innerHTML = "FIND ROUTE";
-                mainBtn.disabled = false;
-                showToast("Failed to find route. Check spelling.", true);
+                mainBtn.innerHTML = "FIND ROUTE"; mainBtn.disabled = false;
+                showToast("Failed to find route.", true);
             }
         }
 
-        function simulateJourney(route, type, btnElement) {
+        // ==========================================
+        // 🚀 NEW LOGIC: REAL-TIME GPS TRACKING API
+        // ==========================================
+        function startRealDrive(destLat, destLon, type, btnElement) {
+            if (!("geolocation" in navigator)) { showToast("Your device doesn't support GPS tracking.", true); return; }
+
             btnElement.disabled = true;
-            btnElement.innerHTML = "<span class='animate-pulse'>🚗 Navigating...</span>";
-            btnElement.className = "w-full py-3.5 bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-2xl text-sm font-bold cursor-not-allowed transition tracking-wide";
+            btnElement.innerHTML = "<span class='animate-pulse'>🛰️ Real Tracking ON...</span>";
+            btnElement.className = "w-full py-3.5 bg-red-500 text-white rounded-2xl text-sm font-bold shadow-lg shadow-red-500/30 transition tracking-wide";
 
-            let coords = route.coordinates; let instructions = route.instructions;
-            let i = 0; let currentInstructionIdx = 0; let currentSpeed = 0;
-            
             const icon = type === 'driving' ? '🚗' : '🏍️';
-            vehicleMarker = L.marker(coords[0], { icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0px 8px 8px rgba(0,0,0,0.5)); transform: rotate(-10deg);">${icon}</div>`, className: '' }), zIndexOffset: 1000 }).addTo(map);
+            const destLatLng = L.latLng(destLat, destLon);
 
-            function move() {
-                if (i < coords.length) {
-                    vehicleMarker.setLatLng(coords[i]);
-                    if (i % 2 === 0) map.panTo(coords[i], { animate: false }); 
-                    if (i % 5 === 0) {
-                        currentSpeed = Math.floor(Math.random() * (80 - 40 + 1) + 40); 
-                        document.getElementById('speedText').innerHTML = `${currentSpeed} <span class="text-[10px] font-normal">km/h</span>`;
+            // 1. Phone ka hardware GPS sensor on karein
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    let lat = position.coords.latitude;
+                    let lng = position.coords.longitude;
+                    let currentLatLng = L.latLng(lat, lng);
+
+                    // 2. Map par gaari ko asli jagah move karein
+                    if (!vehicleMarker) {
+                        vehicleMarker = L.marker(currentLatLng, { icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0px 8px 8px rgba(0,0,0,0.5));">${icon}</div>`, className: '' }), zIndexOffset: 1000 }).addTo(map);
+                    } else {
+                        vehicleMarker.setLatLng(currentLatLng);
                     }
-                    if(currentInstructionIdx < instructions.length) {
-                        let nextInstrIndex = instructions[currentInstructionIdx].index;
-                        if(i === nextInstrIndex) { speakVoice(instructions[currentInstructionIdx].text); currentInstructionIdx++; }
+                    map.panTo(currentLatLng);
+
+                    // 3. Asli Speed Meter (m/s ko km/h mein convert karein)
+                    let speedMps = position.coords.speed || 0; 
+                    let speedKmh = Math.round(speedMps * 3.6);
+                    document.getElementById('speedText').innerHTML = `${speedKmh} <span class="text-[10px] font-normal">km/h</span>`;
+
+                    // 4. Live Distance Calculation (Asli distance kam hoga)
+                    let remainingMeters = map.distance(currentLatLng, destLatLng);
+                    let remainingKm = (remainingMeters / 1000).toFixed(1);
+                    document.getElementById('distText').innerHTML = `${remainingKm} <span class="text-[10px] font-normal">km</span>`;
+
+                    // Destination Pohnchne par
+                    if (remainingMeters < 50) {
+                        navigator.geolocation.clearWatch(watchId);
+                        document.getElementById('speedText').innerHTML = `0 <span class="text-[10px] font-normal">km/h</span>`;
+                        btnElement.innerText = "✅ Destination Reached";
+                        btnElement.className = "w-full py-3.5 bg-green-500 text-white rounded-2xl text-sm font-black shadow-lg shadow-green-500/30 transition tracking-wide";
+                        speakVoice("You have arrived at your destination.");
+                        showToast("Trip Completed Successfully!");
                     }
-                    i++; setTimeout(move, 200); 
-                } else {
-                    document.getElementById('speedText').innerHTML = `0 <span class="text-[10px] font-normal">km/h</span>`;
-                    btnElement.innerText = "✅ Destination Reached";
-                    btnElement.className = "w-full py-3.5 bg-green-500 text-white rounded-2xl text-sm font-black shadow-lg shadow-green-500/30 transition tracking-wide";
-                    speakVoice("You have arrived at your destination.");
-                    showToast("Trip Completed Successfully!");
-                }
-            }
-            move();
+                },
+                (error) => { showToast("GPS signal weak/lost!", true); },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+            );
         }
+
+        // Anti-Gravity Easter Egg
+        let clickCount = 0;
+        document.getElementById('themeIconBtn').addEventListener('click', () => {
+            clickCount++;
+            if(clickCount === 5) {
+                speakVoice("Warning! Anti-gravity system failing! App collapsing!");
+                const elements = document.querySelectorAll('.glass, button, input, select');
+                elements.forEach(el => {
+                    el.style.transition = "transform 2s cubic-bezier(0.55, 0.085, 0.68, 0.53)";
+                    let randomRotate = (Math.random() - 0.5) * 180;
+                    let randomX = (Math.random() - 0.5) * 500;
+                    el.style.transform = `translate(${randomX}px, 1500px) rotate(${randomRotate}deg)`;
+                    el.style.position = "relative"; el.style.zIndex = "9999";
+                });
+                setTimeout(() => { location.reload(); }, 4000);
+            }
+        });
     </script>
 </body>
 </html>
