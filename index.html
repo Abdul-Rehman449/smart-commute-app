@@ -3,100 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Commute - Pro Dashboard</title>
+    <title>Safar Asaan - Premium Navigation</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    backdropBlur: { xs: '2px' }
+                }
+            }
+        }
+    </script>
     <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
         .leaflet-routing-container { display: none !important; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
-        .dark .leaflet-layer { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+        .map-dark { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
     </style>
 </head>
-<body class="bg-white dark:bg-slate-900 h-screen w-screen overflow-hidden text-slate-800 dark:text-white flex flex-col-reverse md:flex-row transition-colors duration-300">
+<body class="bg-slate-50 dark:bg-slate-950 h-screen w-screen overflow-hidden font-sans transition-colors duration-500">
 
-    <div id="ui-panel" class="w-full md:w-[400px] lg:w-[450px] h-[50vh] md:h-screen bg-white dark:bg-slate-900 shadow-[0_0_40px_rgba(0,0,0,0.1)] z-[1000] flex flex-col relative">
+    <!-- Map Background -->
+    <div id="map" class="absolute inset-0 z-0"></div>
+
+    <!-- Main UI Container -->
+    <div class="absolute inset-0 z-[1000] pointer-events-none flex flex-col justify-end md:justify-start md:p-6">
         
-        <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
-            <div>
-                <h1 class="text-xl font-black text-blue-600 dark:text-blue-400 tracking-tight">Smart Commute</h1>
-                <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Route Dashboard</p>
+        <!-- Top Navigation Bar (Always Visible) -->
+        <div class="p-4 md:p-0 pointer-events-auto w-full md:w-[400px]">
+            <div class="glass p-5 rounded-[24px] shadow-2xl flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">Safar <span class="text-blue-600">Asaan</span></h1>
+                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1">Premium Navigator</p>
+                </div>
+                <div class="flex gap-2">
+                    <div id="weather-widget" class="hidden flex items-center gap-2 bg-blue-500/10 dark:bg-blue-400/10 px-3 py-1.5 rounded-full border border-blue-500/10">
+                        <span id="w-icon" class="text-lg">☀️</span>
+                        <span id="w-temp" class="text-sm font-bold dark:text-white">--°C</span>
+                    </div>
+                    <button onclick="toggleTheme()" class="w-10 h-10 glass rounded-full flex items-center justify-center hover:scale-110 transition active:scale-95">
+                        <span id="themeIcon">🌙</span>
+                    </button>
+                </div>
             </div>
-            <button onclick="toggleTheme()" class="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 transition">
-                <span id="themeIcon">🌙</span>
-            </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
-            
-            <div id="inputSection" class="flex flex-col gap-4">
-                <div class="relative flex gap-2">
-                    <button onclick="useMyLocation()" class="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-xl flex items-center justify-center hover:bg-blue-100 transition shrink-0" title="My Location">📍</button>
-                    <input type="text" id="origin" placeholder="Where from?" class="w-full h-12 px-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-blue-500 font-medium transition">
-                    <div id="origin-suggestions" class="absolute top-full left-14 mt-1 w-[calc(100%-3.5rem)] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl hidden max-h-48 overflow-y-auto z-50"></div>
+        <!-- Search Card (Bottom on Mobile, Below Header on Desktop) -->
+        <div id="search-card" class="p-4 md:p-0 md:mt-4 pointer-events-auto w-full md:w-[400px]">
+            <div class="glass p-6 rounded-[32px] shadow-2xl space-y-4">
+                <div class="relative group">
+                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600">🔵</div>
+                    <input type="text" id="origin" placeholder="Mulaqat kahan se? (Origin)" class="w-full pl-12 pr-12 py-4 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl text-sm font-semibold outline-none focus:ring-2 ring-blue-500/20 dark:text-white transition">
+                    <button onclick="useMyLocation()" class="absolute right-4 top-1/2 -translate-y-1/2 hover:scale-125 transition">📍</button>
+                    <div id="origin-suggestions" class="absolute bottom-full md:top-full left-0 right-0 mb-2 md:mb-0 md:mt-2 glass rounded-2xl shadow-xl hidden max-h-60 overflow-y-auto z-[2000] custom-scrollbar"></div>
                 </div>
 
-                <div class="relative">
-                    <input type="text" id="dest" placeholder="Where to?" class="w-full h-12 px-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-blue-500 font-medium transition">
-                    <div id="dest-suggestions" class="absolute top-full left-0 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl hidden max-h-48 overflow-y-auto z-50"></div>
+                <div class="relative group">
+                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-red-500">📍</div>
+                    <input type="text" id="dest" placeholder="Kahan jana hai? (Destination)" class="w-full pl-12 pr-4 py-4 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl text-sm font-semibold outline-none focus:ring-2 ring-blue-500/20 dark:text-white transition">
+                    <div id="dest-suggestions" class="absolute bottom-full md:top-full left-0 right-0 mb-2 md:mb-0 md:mt-2 glass rounded-2xl shadow-xl hidden max-h-60 overflow-y-auto z-[2000] custom-scrollbar"></div>
                 </div>
 
-                <div class="flex gap-2">
-                    <select id="vehicle" class="w-1/3 h-12 px-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none cursor-pointer font-medium text-center">
+                <div class="flex gap-3 pt-2">
+                    <select id="vehicle" class="w-1/3 py-4 glass rounded-2xl text-sm font-bold appearance-none text-center outline-none cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition">
                         <option value="driving">🚗 Car</option>
                         <option value="cycling">🏍️ Bike</option>
                     </select>
-                    <button onclick="checkTraffic()" id="mainGoBtn" class="flex-1 h-12 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition shadow-md active:scale-95">Find Route</button>
+                    <button id="findRouteBtn" onclick="checkTraffic()" class="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-sm shadow-[0_10px_20px_rgba(37,99,235,0.3)] active:scale-95 transition-all">Safar Shuru Karein</button>
                 </div>
             </div>
+        </div>
 
-            <div id="journeySection" class="hidden flex-col gap-5">
-                
-                <button onclick="resetApp()" class="text-xs font-bold text-red-500 hover:text-red-600 self-end flex items-center gap-1">
-                    <span>❌</span> Cancel Route
-                </button>
-
-                <div id="alertArea" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 px-4 py-3 rounded-xl text-xs font-bold items-center gap-2">
-                    ⚠️ <span id="hurdleText"></span>
+        <!-- Journey Details Card -->
+        <div id="journey-card" class="hidden p-4 md:p-0 md:mt-4 pointer-events-auto w-full md:w-[400px]">
+            <div class="glass p-6 rounded-[32px] shadow-2xl flex flex-col gap-6 max-h-[60vh] md:max-h-[70vh] overflow-hidden">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-slate-900 dark:text-white">Route Details</h3>
+                    <button onclick="resetApp()" class="text-[10px] font-black text-red-500 uppercase tracking-widest px-3 py-1 rounded-full bg-red-50 dark:bg-red-900/20">Cancel</button>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 text-center">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Distance</p>
-                        <p id="distText" class="text-2xl font-black text-slate-700 dark:text-slate-200">--</p>
+                <div id="alert-area" class="hidden bg-orange-500/10 border border-orange-500/20 p-4 rounded-2xl flex items-center gap-3">
+                    <span class="text-xl">⚠️</span>
+                    <p id="hurdleText" class="text-xs font-bold text-orange-600 dark:text-orange-400"></p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-blue-500/5 dark:bg-slate-800/50 p-4 rounded-2xl text-center border border-blue-500/10">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Fasla</p>
+                        <p id="distText" class="text-xl font-black text-slate-900 dark:text-white">--</p>
                     </div>
-                    <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 text-center">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Est. Time</p>
-                        <p id="timeText" class="text-2xl font-black text-green-500">--</p>
-                    </div>
-                    <div class="col-span-2 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50 flex justify-between items-center">
-                        <div>
-                            <p class="text-[10px] text-blue-500 font-bold uppercase mb-1">Live Speed</p>
-                            <p id="speedText" class="text-2xl font-black text-blue-600 dark:text-blue-400">0 <span class="text-sm">km/h</span></p>
-                        </div>
-                        <button id="voiceToggle" onclick="toggleVoice()" class="text-blue-600 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">🔊 Voice</button>
+                    <div class="bg-blue-500/5 dark:bg-slate-800/50 p-4 rounded-2xl text-center border border-blue-500/10">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Waqt</p>
+                        <p id="timeText" class="text-xl font-black text-green-600">--</p>
                     </div>
                 </div>
 
-                <div class="flex flex-col flex-1">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-2">Turn-by-Turn</p>
-                    <div id="stepsList" class="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 h-32 overflow-y-auto space-y-3 border border-slate-100 dark:border-slate-700">
-                        <p class="text-xs text-slate-500 text-center mt-4">Awaiting route data...</p>
-                    </div>
+                <div class="flex-1 overflow-y-auto custom-scrollbar pr-2">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-3">Directions</p>
+                    <div id="stepsList" class="space-y-3"></div>
                 </div>
 
-                <button id="startBtn" class="w-full h-14 bg-slate-900 dark:bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition shadow-lg mt-2 active:scale-95">
-                    ▶ START DRIVING
+                <button id="startBtn" class="w-full py-5 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl font-bold text-sm shadow-xl active:scale-95 transition group">
+                    <span class="group-hover:mr-2 transition-all">🚀</span> START DRIVING
                 </button>
             </div>
-
         </div>
     </div>
 
-    <div id="map" class="w-full h-[50vh] md:h-screen md:flex-1 relative z-0 bg-slate-200 dark:bg-slate-800"></div>
+    <!-- Speedometer Floating -->
+    <div id="speedo" class="hidden fixed bottom-10 left-1/2 -translate-x-1/2 glass px-8 py-4 rounded-full shadow-2xl z-[1000] flex items-baseline gap-2 pointer-events-auto">
+        <span id="speedText" class="text-4xl font-black text-blue-600">0</span>
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">km/h</span>
+    </div>
+
+    <!-- Speedometer Floating -->
+    <div id="speedo" class="hidden fixed bottom-10 left-1/2 -translate-x-1/2 glass px-8 py-4 rounded-full shadow-2xl z-[1000] flex items-baseline gap-2">
+        <span id="speedText" class="text-4xl font-black text-blue-600">0</span>
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">km/h</span>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
@@ -104,215 +144,190 @@
     <script>
         let isDark = false;
         let watchId = null; 
-        
+        let routingControl, vehicleMarker;
+
+        // Theme Logic
         function toggleTheme() {
             isDark = !isDark;
             document.documentElement.classList.toggle('dark');
             document.getElementById('themeIcon').innerText = isDark ? "☀️" : "🌙";
+            const mapContainer = document.getElementById('map');
+            if (isDark) mapContainer.classList.add('map-dark');
+            else mapContainer.classList.remove('map-dark');
         }
 
         // Initialize Map
-        var map = L.map('map').setView([33.6844, 73.0479], 12);
+        var map = L.map('map', { zoomControl: false }).setView([33.6844, 73.0479], 12);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        var routingControl, vehicleMarker;
 
-        // Reset App to default state
         function resetApp() {
             if(watchId) navigator.geolocation.clearWatch(watchId);
             if(vehicleMarker) map.removeLayer(vehicleMarker);
             if(routingControl) map.removeControl(routingControl);
             
-            document.getElementById('journeySection').classList.replace('flex', 'hidden');
-            document.getElementById('inputSection').classList.replace('hidden', 'flex');
+            document.getElementById('journey-card').classList.add('hidden');
+            document.getElementById('journey-card').classList.remove('flex');
+            document.getElementById('search-card').classList.remove('hidden');
+            document.getElementById('speedo').classList.add('hidden');
+            document.getElementById('speedo').classList.remove('flex');
+            document.getElementById('weather-widget').classList.add('hidden');
             
-            document.getElementById('mainGoBtn').innerHTML = "Find Route";
-            document.getElementById('mainGoBtn').disabled = false;
+            document.getElementById('origin').value = "";
+            document.getElementById('dest').value = "";
+            document.getElementById('findRouteBtn').innerHTML = "Safar Shuru Karein";
+            document.getElementById('findRouteBtn').disabled = false;
             
-            map.setView([33.6844, 73.0479], 12); // Reset view
+            map.setView([33.6844, 73.0479], 12);
         }
 
-        let isVoiceEnabled = true;
-        function toggleVoice() {
-            isVoiceEnabled = !isVoiceEnabled;
-            const btn = document.getElementById('voiceToggle');
-            btn.innerHTML = isVoiceEnabled ? "🔊 Voice" : "🔇 Muted";
-            btn.classList.toggle('opacity-50', !isVoiceEnabled);
-            window.speechSynthesis.cancel();
-        }
-
-        function speakVoice(text) {
-            if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel(); 
-            let msg = new SpeechSynthesisUtterance(text);
-            msg.rate = 1.0; msg.pitch = 1.1; msg.lang = 'en-US';
-            window.speechSynthesis.speak(msg);
-        }
-
-        // Search Autocomplete Logic
+        // Autocomplete
         let searchTimeout;
         async function handleSearch(e, type) {
             clearTimeout(searchTimeout);
             const val = e.target.value;
             const suggBox = document.getElementById(`${type}-suggestions`);
             if (val.length < 3) { suggBox.classList.add('hidden'); return; }
+            
             searchTimeout = setTimeout(async () => {
                 try {
                     const res = await fetch(`/search?q=${val}`);
                     const data = await res.json();
-                    if (data.length > 0) {
+                    if (data && data.length > 0) {
                         suggBox.innerHTML = data.map(item => {
                             const shortName = item.display_name.split(',')[0].replace(/'/g, "\\'");
-                            const fullName = item.display_name.replace(/'/g, "\\'");
-                            return `<div class="p-3 border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex flex-col" onclick="selectLocation('${type}', '${shortName}')"><span class="font-bold text-sm">${shortName}</span><span class="text-[10px] text-slate-500 truncate">${fullName}</span></div>`}).join('');
+                            return `<div class="p-4 border-b border-white/10 hover:bg-blue-500/10 cursor-pointer" onclick="selectLocation('${type}', '${shortName}')">
+                                <p class="font-bold text-sm dark:text-white">${shortName}</p>
+                                <p class="text-[10px] text-slate-500 truncate">${item.display_name}</p>
+                            </div>`}).join('');
                         suggBox.classList.remove('hidden');
                     } else { suggBox.classList.add('hidden'); }
-                } catch(err) {}
-            }, 500);
+                } catch(err) { console.error(err); }
+            }, 1000); // 1s Debounce for Nominatim safety
         }
-        
+
         function selectLocation(type, name) { 
             document.getElementById(type).value = name; 
             document.getElementById(`${type}-suggestions`).classList.add('hidden'); 
         }
+
         document.getElementById('origin').addEventListener('input', (e) => handleSearch(e, 'origin'));
         document.getElementById('dest').addEventListener('input', (e) => handleSearch(e, 'dest'));
 
         function useMyLocation() {
-            const originInput = document.getElementById('origin'); 
-            originInput.value = "Locating... ⏳";
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(async function(position) {
-                    var lat = position.coords.latitude; var lon = position.coords.longitude;
-                    try {
-                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-                        const data = await res.json();
-                        originInput.value = data.address.city || data.address.town || "My Location";
-                    } catch(e) { originInput.value = "My Location"; }
-                }, () => { originInput.value = "Failed to get location"; }, { enableHighAccuracy: true });
-            }
+            const input = document.getElementById('origin');
+            input.value = "Locating... ⏳";
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const { latitude: lat, longitude: lon } = pos.coords;
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                    const data = await res.json();
+                    input.value = data.address.city || data.address.town || "My Location";
+                } catch(e) { input.value = "My Location"; }
+            }, () => input.value = "GPS Error", { enableHighAccuracy: true });
         }
 
-        // Main Route Fetching
+        // Fetch Weather
+        async function updateWeather(lat, lon) {
+            try {
+                const res = await fetch(`/get_weather?lat=${lat}&lon=${lon}`);
+                const data = await res.json();
+                if (data.status === "success") {
+                    document.getElementById('weather-widget').classList.remove('hidden');
+                    document.getElementById('w-icon').innerText = data.current_icon;
+                    document.getElementById('w-temp').innerText = `${Math.round(data.current_temp)}°C`;
+                }
+            } catch(e) {}
+        }
+
         async function checkTraffic() {
             const origin = document.getElementById('origin').value;
             const dest = document.getElementById('dest').value;
             const vehicle = document.getElementById('vehicle').value;
 
-            if(!origin || !dest) { alert("Please enter both locations."); return; }
+            if(!origin || !dest) return alert("Please enter locations.");
 
-            const mainBtn = document.getElementById('mainGoBtn');
-            mainBtn.innerHTML = "Fetching... ⏳"; mainBtn.disabled = true;
+            const btn = document.getElementById('findRouteBtn');
+            btn.innerHTML = "Raasta dhoond rahe hain... ⏳";
+            btn.disabled = true;
 
             try {
                 const res = await fetch(`/get_route?origin=${origin}&destination=${dest}`);
-                if (!res.ok) throw new Error("Server error");
                 const data = await res.json();
 
                 if (data.status === "success") {
+                    document.getElementById('search-card').classList.add('hidden');
+                    document.getElementById('journey-card').classList.remove('hidden');
+                    document.getElementById('journey-card').classList.add('flex');
                     
-                    // Switch UI State
-                    document.getElementById('inputSection').classList.replace('flex', 'hidden');
-                    document.getElementById('journeySection').classList.replace('hidden', 'flex');
+                    updateWeather(data.dest_coords.lat, data.dest_coords.lon);
 
-                    // Set Route
                     if(routingControl) map.removeControl(routingControl);
-                    if(vehicleMarker) map.removeLayer(vehicleMarker);
-
-                    const startBtn = document.getElementById('startBtn');
-                    startBtn.disabled = false; 
-                    startBtn.innerHTML = '▶ START DRIVING';
-                    startBtn.className = "w-full h-14 bg-slate-900 dark:bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition shadow-lg mt-2 active:scale-95";
-
                     routingControl = L.Routing.control({
                         waypoints: [L.latLng(data.origin_coords.lat, data.origin_coords.lon), L.latLng(data.dest_coords.lat, data.dest_coords.lon)],
                         router: L.Routing.osrmv1({ profile: vehicle }),
                         addWaypoints: false, draggableWaypoints: false, show: false,
-                        fitSelectedRoutes: true, // Auto focus map on line
-                        lineOptions: { styles: [{color: '#2563eb', opacity: 0.9, weight: 6}] }
+                        fitSelectedRoutes: true,
+                        lineOptions: { styles: [{color: '#2563eb', opacity: 0.8, weight: 8}] }
                     }).addTo(map);
 
-                    routingControl.on('routesfound', async function(e) {
+                    routingControl.on('routesfound', (e) => {
                         const route = e.routes[0];
-                        const summary = route.summary;
+                        document.getElementById('distText').innerText = `${(route.summary.totalDistance/1000).toFixed(1)} km`;
+                        document.getElementById('timeText').innerText = `${Math.round(route.summary.totalTime/60)} min`;
                         
-                        document.getElementById('distText').innerHTML = `${(summary.totalDistance/1000).toFixed(1)} <span class="text-xs font-normal">km</span>`;
-                        document.getElementById('timeText').innerHTML = `${Math.round(summary.totalTime/60)} <span class="text-xs font-normal">min</span>`;
+                        let steps = "";
+                        route.instructions.forEach(i => {
+                            steps += `<div class="flex gap-3 text-xs font-medium dark:text-slate-300 border-b border-white/5 pb-2">
+                                <span class="text-blue-500">➜</span> ${i.text}
+                            </div>`;
+                        });
+                        document.getElementById('stepsList').innerHTML = steps;
 
                         if(data.hurdle) {
-                            document.getElementById('alertArea').classList.replace('hidden', 'flex');
-                            document.getElementById('hurdleText').innerText = data.hurdle + " ahead";
-                        } else { document.getElementById('alertArea').classList.replace('flex', 'hidden'); }
+                            document.getElementById('alert-area').classList.remove('hidden');
+                            document.getElementById('hurdleText').innerText = data.hurdle + " ahead! Be careful.";
+                        } else {
+                            document.getElementById('alert-area').classList.add('hidden');
+                        }
 
-                        let stepsHtml = "";
-                        route.instructions.forEach((instr, idx) => { 
-                            stepsHtml += `<div class='flex gap-3 items-start border-b border-slate-100 dark:border-slate-700 pb-2'><div class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded w-5 h-5 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">${idx+1}</div><span class="text-xs font-medium text-slate-700 dark:text-slate-300">${instr.text}</span></div>`; 
-                        });
-                        document.getElementById('stepsList').innerHTML = stepsHtml;
-
-                        startBtn.onclick = () => {
-                            speakVoice(`Starting navigation to ${dest}.`);
-                            startRealDrive(data.dest_coords.lat, data.dest_coords.lon, vehicle, startBtn);
-                        };
+                        document.getElementById('startBtn').onclick = () => startTracking(data.dest_coords, vehicle);
                     });
                 } else {
+                    alert(data.message || "Failed to find route.");
                     resetApp();
-                    alert("Failed to find route.");
                 }
-            } catch (error) {
+            } catch(e) {
+                alert("Server error.");
                 resetApp();
-                alert("Server connection failed.");
             }
         }
 
-        // Live Tracking
-        function startRealDrive(destLat, destLon, type, btnElement) {
-            if (!("geolocation" in navigator)) { alert("GPS tracking not supported."); return; }
-
-            btnElement.disabled = true;
-            btnElement.innerHTML = "🛰️ TRACKING LIVE";
-            btnElement.className = "w-full h-14 bg-red-500 text-white rounded-xl font-bold text-sm shadow-lg transition mt-2";
-
+        function startTracking(dest, type) {
+            document.getElementById('startBtn').classList.add('hidden');
+            document.getElementById('speedo').classList.remove('hidden');
+            document.getElementById('speedo').classList.add('flex');
+            
             const icon = type === 'driving' ? '🚗' : '🏍️';
-            const destLatLng = L.latLng(destLat, destLon);
-            let lastUpdateTime = 0;
+            const destLatLng = L.latLng(dest.lat, dest.lon);
 
-            watchId = navigator.geolocation.watchPosition(
-                (position) => {
-                    let now = Date.now();
-                    if (now - lastUpdateTime < 2000) return; 
-                    lastUpdateTime = now;
+            watchId = navigator.geolocation.watchPosition((pos) => {
+                const current = L.latLng(pos.coords.latitude, pos.coords.longitude);
+                if (!vehicleMarker) {
+                    vehicleMarker = L.marker(current, { icon: L.divIcon({ html: `<div class="text-4xl shadow-xl">${icon}</div>`, className: '' }) }).addTo(map);
+                } else {
+                    vehicleMarker.setLatLng(current);
+                }
+                map.panTo(current);
+                
+                document.getElementById('speedText').innerText = Math.round((pos.coords.speed || 0) * 3.6);
+                const dist = map.distance(current, destLatLng);
+                document.getElementById('distText').innerText = `${(dist/1000).toFixed(1)} km`;
 
-                    let lat = position.coords.latitude;
-                    let lng = position.coords.longitude;
-                    let currentLatLng = L.latLng(lat, lng);
-
-                    if (!vehicleMarker) {
-                        vehicleMarker = L.marker(currentLatLng, { icon: L.divIcon({ html: `<div style="font-size: 32px;">${icon}</div>`, className: '' }), zIndexOffset: 1000 }).addTo(map);
-                    } else {
-                        vehicleMarker.setLatLng(currentLatLng);
-                    }
-                    
-                    map.panTo(currentLatLng);
-
-                    let speedMps = position.coords.speed || 0; 
-                    let speedKmh = Math.round(speedMps * 3.6);
-                    document.getElementById('speedText').innerHTML = `${speedKmh} <span class="text-sm">km/h</span>`;
-
-                    let remainingMeters = map.distance(currentLatLng, destLatLng);
-                    let remainingKm = (remainingMeters / 1000).toFixed(1);
-                    document.getElementById('distText').innerHTML = `${remainingKm} <span class="text-xs font-normal">km</span>`;
-
-                    if (remainingMeters < 50) {
-                        navigator.geolocation.clearWatch(watchId);
-                        document.getElementById('speedText').innerHTML = `0 <span class="text-sm">km/h</span>`;
-                        btnElement.innerHTML = "✅ ARRIVED";
-                        btnElement.className = "w-full h-14 bg-green-500 text-white rounded-xl font-bold text-sm shadow-lg transition mt-2";
-                        speakVoice("You have arrived.");
-                    }
-                },
-                (error) => {},
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-            );
+                if (dist < 50) {
+                    alert("Aap manzil par pahunch gaye! ✅");
+                    resetApp();
+                }
+            }, null, { enableHighAccuracy: true });
         }
     </script>
 </body>
