@@ -28,63 +28,71 @@ def serve_frontend():
 @app.get("/search")
 def search_location(q: str):
     url = f"https://nominatim.openstreetmap.org/search?format=json&q={q}"
-    headers = {'User-Agent': 'SmartCommuteApp/1.0'}
-    response = requests.get(url, headers=headers)
-    return response.json()
+    headers = {'User-Agent': 'SafarAsaan/1.0'}
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except Exception:
+        return []
 
 @app.get("/get_route")
 def get_route(origin: str, destination: str):
-    headers = {'User-Agent': 'SmartCommuteApp/1.0'}
-    
-    # Origin ke coordinates nikalo
-    orig_url = f"https://nominatim.openstreetmap.org/search?format=json&q={origin}"
-    orig_res = requests.get(orig_url, headers=headers).json()
-    
-    # Destination ke coordinates nikalo
-    dest_url = f"https://nominatim.openstreetmap.org/search?format=json&q={destination}"
-    dest_res = requests.get(dest_url, headers=headers).json()
+    headers = {'User-Agent': 'SafarAsaan/1.0'}
+    try:
+        # Origin ke coordinates nikalo
+        orig_url = f"https://nominatim.openstreetmap.org/search?format=json&q={origin}"
+        orig_res = requests.get(orig_url, headers=headers, timeout=10).json()
+        
+        # Destination ke coordinates nikalo
+        dest_url = f"https://nominatim.openstreetmap.org/search?format=json&q={destination}"
+        dest_res = requests.get(dest_url, headers=headers, timeout=10).json()
 
-    if not orig_res or not dest_res:
-        return {"status": "failed"}
+        if not orig_res or not dest_res:
+            return {"status": "failed", "message": "Location not found"}
 
-    orig_coords = {"lat": orig_res[0]["lat"], "lon": orig_res[0]["lon"]}
-    dest_coords = {"lat": dest_res[0]["lat"], "lon": dest_res[0]["lon"]}
+        orig_coords = {"lat": orig_res[0]["lat"], "lon": orig_res[0]["lon"]}
+        dest_coords = {"lat": dest_res[0]["lat"], "lon": dest_res[0]["lon"]}
 
-    # Traffic Hurdle ka logic
-    hurdles = ["Construction 🚧", "Accident 💥", "Heavy Traffic 🛑", None, None, None]
-    hurdle = random.choice(hurdles)
+        # Traffic Hurdle ka logic
+        hurdles = ["Construction 🚧", "Accident 💥", "Heavy Traffic 🛑", None, None, None]
+        hurdle = random.choice(hurdles)
 
-    return {
-        "status": "success",
-        "origin_coords": orig_coords,
-        "dest_coords": dest_coords,
-        "hurdle": hurdle
-    }
+        return {
+            "status": "success",
+            "origin_coords": orig_coords,
+            "dest_coords": dest_coords,
+            "hurdle": hurdle
+        }
+    except Exception as e:
+        return {"status": "failed", "message": str(e)}
 
 @app.get("/get_weather")
 def get_weather(lat: str, lon: str):
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&hourly=temperature_2m,weathercode"
-    res = requests.get(url).json()
-    
-    if "current_weather" in res:
-        temp = res["current_weather"]["temperature"]
-        code = res["current_weather"]["weathercode"]
-        
-        # Weather ke icons
-        icon = "☀️"
-        if code in [1, 2, 3]: icon = "⛅"
-        elif code in [45, 48]: icon = "🌫️"
-        elif code in [51, 53, 55, 61, 63, 65, 80, 81, 82]: icon = "🌧️"
-        elif code in [71, 73, 75, 85, 86]: icon = "❄️"
-        elif code in [95, 96, 99]: icon = "⛈️"
+    try:
+        res = requests.get(url, timeout=10).json()
+        if "current_weather" in res:
+            temp = res["current_weather"]["temperature"]
+            code = res["current_weather"]["weathercode"]
+            
+            # Weather ke icons
+            icon = "☀️"
+            if code in [1, 2, 3]: icon = "⛅"
+            elif code in [45, 48]: icon = "🌫️"
+            elif code in [51, 53, 55, 61, 63, 65, 80, 81, 82]: icon = "🌧️"
+            elif code in [71, 73, 75, 85, 86]: icon = "❄️"
+            elif code in [95, 96, 99]: icon = "⛈️"
 
-        return {
-            "status": "success",
-            "current_temp": temp,
-            "current_icon": icon,
-            "forecast": [
-                {"time": "+1h", "icon": icon, "temp": temp},
-                {"time": "+2h", "icon": icon, "temp": temp}
-            ]
-        }
+            return {
+                "status": "success",
+                "current_temp": temp,
+                "current_icon": icon,
+                "forecast": [
+                    {"time": "+1h", "icon": icon, "temp": temp},
+                    {"time": "+2h", "icon": icon, "temp": temp}
+                ]
+            }
+    except Exception:
+        pass
     return {"status": "failed"}
