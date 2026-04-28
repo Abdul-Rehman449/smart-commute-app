@@ -19,23 +19,17 @@
         .hover-lift { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .hover-lift:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.15); }
         
-        .user-location-dot {
-            background-color: #3b82f6; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.9); animation: pulse-ring 1.5s infinite;
-        }
-        @keyframes pulse-ring { 0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); } 100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+        .dark .leaflet-layer { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+        .bg-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px; }
+        .dark .bg-pattern { background-image: radial-gradient(#334155 1px, transparent 1px); }
 
         #toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); transition: bottom 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); z-index: 99999; }
         .show-toast { bottom: 24px !important; }
-        .dark .leaflet-layer { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
-        
-        .bg-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px; }
-        .dark .bg-pattern { background-image: radial-gradient(#334155 1px, transparent 1px); }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 h-screen w-screen overflow-hidden font-sans transition-colors duration-500 text-slate-800 dark:text-white">
+<body class="bg-slate-50 dark:bg-slate-900 h-screen w-screen overflow-hidden font-sans transition-colors duration-500 text-slate-800 dark:text-white relative">
 
-    <button onclick="toggleTheme()" id="themeIconBtn" class="absolute top-4 right-4 z-[9999] bg-white dark:bg-slate-800 p-3 rounded-full shadow-lg hover:scale-110 transition-transform">
+    <button onclick="toggleTheme()" class="absolute top-4 right-4 z-[9999] bg-white dark:bg-slate-800 p-3 rounded-full shadow-lg hover:scale-110 transition-transform">
         <span id="themeIcon" class="text-xl">🌙</span>
     </button>
 
@@ -45,7 +39,6 @@
                 <h1 class="text-3xl font-black text-blue-600 dark:text-blue-400 mb-2 tracking-tight">Smart Commute</h1>
                 <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Where are you going today?</p>
             </div>
-            <div class="flex flex-wrap items-center gap-2" id="favoritesRow"></div>
             <div class="flex flex-col gap-4 relative">
                 <div class="relative w-full flex gap-2">
                     <button onclick="useMyLocation()" class="w-12 h-12 flex items-center justify-center bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-2xl hover:bg-blue-100 transition shadow-sm shrink-0" title="My Location">📍</button>
@@ -61,7 +54,6 @@
                         <option value="driving">Car 🚗</option>
                         <option value="cycling">Bike 🏍️</option>
                     </select>
-                    <button onclick="saveFavorite()" class="w-12 flex items-center justify-center bg-yellow-50 dark:bg-yellow-900/20 text-yellow-500 border border-yellow-200 dark:border-yellow-800 rounded-2xl hover:bg-yellow-100 transition shadow-sm">⭐</button>
                     <button onclick="checkTraffic()" id="mainGoBtn" class="flex-1 bg-blue-600 text-white rounded-2xl font-black hover:bg-blue-700 transition shadow-lg shadow-blue-500/30 text-sm tracking-wide">FIND ROUTE</button>
                 </div>
             </div>
@@ -69,7 +61,8 @@
     </div>
 
     <div id="mapScreen" class="absolute inset-0 z-0 hidden opacity-0 transition-opacity duration-500">
-        <div id="map" class="absolute inset-0 z-0"></div>
+        <div id="map" class="absolute inset-0 h-full w-full"></div>
+        
         <div class="absolute top-4 left-4 right-16 z-20 glass rounded-2xl shadow-lg p-3 flex items-center justify-between">
             <div class="flex items-center gap-3 overflow-hidden">
                 <button onclick="goBackToHome()" class="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl hover:bg-slate-200 transition text-sm">❌</button>
@@ -127,13 +120,19 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         var routingControl, vehicleMarker;
 
+        // MAP SHOW LOGIC FIXED (No blank screen)
         function showMapScreen() {
             document.getElementById('homeScreen').classList.add('opacity-0');
             setTimeout(() => {
                 document.getElementById('homeScreen').classList.add('hidden');
                 const mapScreen = document.getElementById('mapScreen');
                 mapScreen.classList.remove('hidden');
-                setTimeout(() => { map.invalidateSize(); mapScreen.classList.remove('opacity-0'); }, 50);
+                
+                // Jadoo taa ke map tutay nahi
+                setTimeout(() => { 
+                    map.invalidateSize(); 
+                    mapScreen.classList.remove('opacity-0'); 
+                }, 200); 
             }, 500);
         }
 
@@ -150,7 +149,6 @@
             }, 500);
             document.getElementById('mainGoBtn').innerHTML = "FIND ROUTE";
             document.getElementById('mainGoBtn').disabled = false;
-            document.getElementById('weatherBox').classList.add('hidden');
         }
 
         let isVoiceEnabled = true;
@@ -176,6 +174,7 @@
             setTimeout(() => toast.classList.remove('show-toast'), 3000);
         }
 
+        // SEARCH LOCATION
         let searchTimeout;
         async function handleSearch(e, type) {
             clearTimeout(searchTimeout);
@@ -214,13 +213,13 @@
             }
         }
 
-        // WEATHER HTML FUNCTION (RESTORED)
         function createWeatherHTML(data) {
             let html = `<div class="text-center bg-slate-50 dark:bg-slate-700 rounded-lg p-1.5 min-w-[45px]"><p class="text-[7px] font-bold text-slate-400">NOW</p><p class="text-lg">${data.current_icon}</p><p class="text-[10px] font-black">${data.current_temp}°</p></div>`;
             data.forecast.slice(0,2).forEach(f => { html += `<div class="text-center p-1.5 min-w-[45px] opacity-60"><p class="text-[7px] font-bold text-slate-400">${f.time}</p><p class="text-lg">${f.icon}</p><p class="text-[10px] font-bold">${f.temp}°</p></div>`; });
             return html;
         }
 
+        // FIND ROUTE BUTTON LOGIC
         async function checkTraffic() {
             const origin = document.getElementById('origin').value;
             const dest = document.getElementById('dest').value;
@@ -263,7 +262,6 @@
                         document.getElementById('distText').innerHTML = `${dist_km} <span class="text-[10px] font-normal">km</span>`;
                         document.getElementById('timeText').innerHTML = `${Math.round(summary.totalTime/60)} <span class="text-[10px] font-normal">min</span>`;
 
-                        // ALERT / HURDLE LOGIC (RESTORED)
                         if(data.hurdle) {
                             document.getElementById('alertArea').classList.remove('hidden');
                             document.getElementById('hurdleText').innerText = data.hurdle + " detected!";
@@ -279,7 +277,6 @@
                             startRealDrive(data.dest_coords.lat, data.dest_coords.lon, vehicle, startBtn);
                         };
 
-                        // WEATHER API CALL (RESTORED)
                         try {
                             const [originRes, destRes] = await Promise.all([
                                 fetch(`/get_weather?lat=${data.origin_coords.lat}&lon=${data.origin_coords.lon}`),
@@ -303,6 +300,7 @@
             }
         }
 
+        // REAL-TIME GPS TRACKER
         function startRealDrive(destLat, destLon, type, btnElement) {
             if (!("geolocation" in navigator)) { showToast("Your device doesn't support GPS tracking.", true); return; }
 
@@ -312,9 +310,14 @@
 
             const icon = type === 'driving' ? '🚗' : '🏍️';
             const destLatLng = L.latLng(destLat, destLon);
+            let lastUpdateTime = 0;
 
             watchId = navigator.geolocation.watchPosition(
                 (position) => {
+                    let now = Date.now();
+                    if (now - lastUpdateTime < 2500) return; // Throttling for stability
+                    lastUpdateTime = now;
+
                     let lat = position.coords.latitude;
                     let lng = position.coords.longitude;
                     let currentLatLng = L.latLng(lat, lng);
@@ -324,7 +327,7 @@
                     } else {
                         vehicleMarker.setLatLng(currentLatLng);
                     }
-                    map.panTo(currentLatLng);
+                    map.panTo(currentLatLng, { animate: false });
 
                     let speedMps = position.coords.speed || 0; 
                     let speedKmh = Math.round(speedMps * 3.6);
@@ -343,27 +346,10 @@
                         showToast("Trip Completed Successfully!");
                     }
                 },
-                (error) => { showToast("GPS signal weak/lost!", true); },
+                (error) => { console.log("GPS updating..."); },
                 { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
             );
         }
-
-        let clickCount = 0;
-        document.getElementById('themeIconBtn').addEventListener('click', () => {
-            clickCount++;
-            if(clickCount === 5) {
-                speakVoice("Warning! Anti-gravity system failing! App collapsing!");
-                const elements = document.querySelectorAll('.glass, button, input, select');
-                elements.forEach(el => {
-                    el.style.transition = "transform 2s cubic-bezier(0.55, 0.085, 0.68, 0.53)";
-                    let randomRotate = (Math.random() - 0.5) * 180;
-                    let randomX = (Math.random() - 0.5) * 500;
-                    el.style.transform = `translate(${randomX}px, 1500px) rotate(${randomRotate}deg)`;
-                    el.style.position = "relative"; el.style.zIndex = "9999";
-                });
-                setTimeout(() => { location.reload(); }, 4000);
-            }
-        });
     </script>
 </body>
 </html>
