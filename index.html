@@ -3,105 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Commute Pro Max</title>
+    <title>Smart Commute - Pro Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <style>
         .leaflet-routing-container { display: none !important; }
-        ::-webkit-scrollbar { height: 4px; width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
-        
-        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.8); }
-        .dark .glass { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.1); }
-        
-        .hover-lift { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .hover-lift:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.15); }
-        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
         .dark .leaflet-layer { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
-        .bg-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px; }
-        .dark .bg-pattern { background-image: radial-gradient(#334155 1px, transparent 1px); }
-
-        #toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); transition: bottom 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); z-index: 99999; }
-        .show-toast { bottom: 24px !important; }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 h-screen w-screen overflow-hidden font-sans transition-colors duration-500 text-slate-800 dark:text-white relative">
+<body class="bg-white dark:bg-slate-900 h-screen w-screen overflow-hidden text-slate-800 dark:text-white flex flex-col-reverse md:flex-row transition-colors duration-300">
 
-    <button onclick="toggleTheme()" class="absolute top-4 right-4 z-[9999] bg-white dark:bg-slate-800 p-3 rounded-full shadow-lg hover:scale-110 transition-transform">
-        <span id="themeIcon" class="text-xl">🌙</span>
-    </button>
-
-    <div id="homeScreen" class="absolute inset-0 z-[2000] flex items-center justify-center bg-slate-50 dark:bg-slate-900 bg-pattern p-4 transition-opacity duration-500">
-        <div class="glass p-8 rounded-[30px] shadow-2xl w-full max-w-lg flex flex-col gap-6 relative">
-            <div class="text-center">
-                <h1 class="text-3xl font-black text-blue-600 dark:text-blue-400 mb-2 tracking-tight">Smart Commute</h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Where are you going today?</p>
-            </div>
-            <div class="flex flex-col gap-4 relative">
-                <div class="relative w-full flex gap-2">
-                    <button onclick="useMyLocation()" class="w-12 h-12 flex items-center justify-center bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-2xl hover:bg-blue-100 transition shadow-sm shrink-0" title="My Location">📍</button>
-                    <input type="text" id="origin" placeholder="Pick-up location" class="w-full h-12 px-4 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 border border-slate-200 rounded-2xl text-sm outline-none shadow-sm font-medium">
-                    <div id="origin-suggestions" class="absolute top-full left-14 mt-2 w-[calc(100%-3.5rem)] bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-xl hidden max-h-48 overflow-y-auto z-[1000]"></div>
-                </div>
-                <div class="relative w-full">
-                    <input type="text" id="dest" placeholder="Drop-off location" class="w-full h-12 px-4 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 border border-slate-200 rounded-2xl text-sm outline-none shadow-sm font-medium">
-                    <div id="dest-suggestions" class="absolute top-full left-0 mt-2 w-full bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-xl hidden max-h-48 overflow-y-auto z-[1000]"></div>
-                </div>
-                <div class="flex gap-2 h-12">
-                    <select id="vehicle" class="w-1/3 px-4 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 border border-slate-200 rounded-2xl text-sm outline-none shadow-sm cursor-pointer font-medium">
-                        <option value="driving">Car 🚗</option>
-                        <option value="cycling">Bike 🏍️</option>
-                    </select>
-                    <button onclick="checkTraffic()" id="mainGoBtn" class="flex-1 bg-blue-600 text-white rounded-2xl font-black hover:bg-blue-700 transition shadow-lg shadow-blue-500/30 text-sm tracking-wide">FIND ROUTE</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="mapScreen" class="absolute inset-0 z-0 hidden opacity-0 transition-opacity duration-500">
-        <div id="map" class="absolute inset-0 h-full w-full z-0"></div>
+    <div id="ui-panel" class="w-full md:w-[400px] lg:w-[450px] h-[50vh] md:h-screen bg-white dark:bg-slate-900 shadow-[0_0_40px_rgba(0,0,0,0.1)] z-[1000] flex flex-col relative">
         
-        <div class="absolute top-4 left-4 right-16 z-[1000] glass rounded-2xl shadow-lg p-3 flex items-center justify-between">
-            <div class="flex items-center gap-3 overflow-hidden">
-                <button onclick="goBackToHome()" class="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl hover:bg-slate-200 transition text-sm">❌</button>
-                <div class="truncate text-xs font-bold text-slate-600 dark:text-slate-300">
-                    <span id="displayOrigin" class="text-blue-500">Origin</span> <span class="mx-1">➔</span> <span id="displayDest" class="text-green-500">Destination</span>
-                </div>
+        <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
+            <div>
+                <h1 class="text-xl font-black text-blue-600 dark:text-blue-400 tracking-tight">Smart Commute</h1>
+                <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Route Dashboard</p>
             </div>
-            <button id="voiceToggle" onclick="toggleVoice()" class="ml-2 text-blue-600 bg-blue-50 dark:bg-slate-700 px-3 py-1.5 rounded-xl font-bold text-[10px]">🔊 Voice: ON</button>
+            <button onclick="toggleTheme()" class="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 transition">
+                <span id="themeIcon">🌙</span>
+            </button>
         </div>
 
-        <div class="absolute bottom-4 left-4 right-4 z-[1000] glass rounded-[30px] shadow-2xl p-4 flex flex-col gap-3 max-h-[45vh]">
-            <div id="alertArea" class="p-2 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl text-xs font-bold hidden text-center animate-pulse">⚠️ Alert: <span id="hurdleText"></span></div>
+        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
             
-            <div class="flex gap-3 overflow-x-auto pb-2 items-stretch" style="scrollbar-width: none;">
-                <div class="min-w-[220px] bg-white dark:bg-slate-800 p-4 rounded-2xl flex flex-col justify-between shrink-0 shadow-sm border border-slate-100 dark:border-slate-700">
-                    <div class="flex justify-between items-center mb-1">
-                        <div class="text-center"><p class="text-[9px] text-slate-400 font-bold uppercase">Speed</p><p id="speedText" class="text-lg font-black text-blue-600">0 <span class="text-[10px] font-normal">km/h</span></p></div>
-                        <div class="text-center"><p class="text-[9px] text-slate-400 font-bold uppercase">Dist</p><p id="distText" class="text-lg font-black text-slate-700 dark:text-white">--</p></div>
-                        <div class="text-center"><p class="text-[9px] text-slate-400 font-bold uppercase">ETA</p><p id="timeText" class="text-lg font-black text-green-500">--</p></div>
-                    </div>
-                </div>
-                
-                <div class="min-w-[250px] bg-white dark:bg-slate-800 p-4 rounded-2xl shrink-0 shadow-sm flex flex-col border border-slate-100 dark:border-slate-700">
-                    <h3 class="text-[9px] font-black text-slate-400 mb-2 uppercase">Next Steps</h3>
-                    <div id="stepsList" class="space-y-2 text-[11px] text-slate-600 dark:text-slate-300 overflow-y-auto h-[60px] pr-2"></div>
+            <div id="inputSection" class="flex flex-col gap-4">
+                <div class="relative flex gap-2">
+                    <button onclick="useMyLocation()" class="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-xl flex items-center justify-center hover:bg-blue-100 transition shrink-0" title="My Location">📍</button>
+                    <input type="text" id="origin" placeholder="Where from?" class="w-full h-12 px-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-blue-500 font-medium transition">
+                    <div id="origin-suggestions" class="absolute top-full left-14 mt-1 w-[calc(100%-3.5rem)] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl hidden max-h-48 overflow-y-auto z-50"></div>
                 </div>
 
-                <div id="weatherBox" class="min-w-[280px] bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl hidden shrink-0 shadow-sm">
-                    <div class="flex justify-between gap-4 h-full">
-                        <div class="w-1/2 border-r border-slate-100 dark:border-slate-700 pr-2"><h4 class="text-[8px] font-black text-blue-500 mb-1 uppercase">Pick-up Weather</h4><div id="originWeather" class="flex gap-1 overflow-x-auto"></div></div>
-                        <div class="w-1/2 pl-1"><h4 class="text-[8px] font-black text-green-500 mb-1 uppercase">Drop-off Weather</h4><div id="destWeather" class="flex gap-1 overflow-x-auto"></div></div>
-                    </div>
+                <div class="relative">
+                    <input type="text" id="dest" placeholder="Where to?" class="w-full h-12 px-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-blue-500 font-medium transition">
+                    <div id="dest-suggestions" class="absolute top-full left-0 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl hidden max-h-48 overflow-y-auto z-50"></div>
+                </div>
+
+                <div class="flex gap-2">
+                    <select id="vehicle" class="w-1/3 h-12 px-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none cursor-pointer font-medium text-center">
+                        <option value="driving">🚗 Car</option>
+                        <option value="cycling">🏍️ Bike</option>
+                    </select>
+                    <button onclick="checkTraffic()" id="mainGoBtn" class="flex-1 h-12 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition shadow-md active:scale-95">Find Route</button>
                 </div>
             </div>
-            <button id="startBtn" class="w-full py-3.5 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl text-sm font-black shadow-lg hover:bg-slate-800 transition transform active:scale-95 tracking-wide">▶ START REAL DRIVE</button>
+
+            <div id="journeySection" class="hidden flex-col gap-5">
+                
+                <button onclick="resetApp()" class="text-xs font-bold text-red-500 hover:text-red-600 self-end flex items-center gap-1">
+                    <span>❌</span> Cancel Route
+                </button>
+
+                <div id="alertArea" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 px-4 py-3 rounded-xl text-xs font-bold items-center gap-2">
+                    ⚠️ <span id="hurdleText"></span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 text-center">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Distance</p>
+                        <p id="distText" class="text-2xl font-black text-slate-700 dark:text-slate-200">--</p>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 text-center">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Est. Time</p>
+                        <p id="timeText" class="text-2xl font-black text-green-500">--</p>
+                    </div>
+                    <div class="col-span-2 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50 flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] text-blue-500 font-bold uppercase mb-1">Live Speed</p>
+                            <p id="speedText" class="text-2xl font-black text-blue-600 dark:text-blue-400">0 <span class="text-sm">km/h</span></p>
+                        </div>
+                        <button id="voiceToggle" onclick="toggleVoice()" class="text-blue-600 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">🔊 Voice</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col flex-1">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-2">Turn-by-Turn</p>
+                    <div id="stepsList" class="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 h-32 overflow-y-auto space-y-3 border border-slate-100 dark:border-slate-700">
+                        <p class="text-xs text-slate-500 text-center mt-4">Awaiting route data...</p>
+                    </div>
+                </div>
+
+                <button id="startBtn" class="w-full h-14 bg-slate-900 dark:bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition shadow-lg mt-2 active:scale-95">
+                    ▶ START DRIVING
+                </button>
+            </div>
+
         </div>
     </div>
 
-    <div id="toast" class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-2xl shadow-2xl font-black text-sm flex items-center gap-2">✨ <span id="toastMsg">Success!</span></div>
+    <div id="map" class="w-full h-[50vh] md:h-screen md:flex-1 relative z-0 bg-slate-200 dark:bg-slate-800"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
@@ -116,42 +111,35 @@
             document.getElementById('themeIcon').innerText = isDark ? "☀️" : "🌙";
         }
 
-        var map = L.map('map', { zoomControl: false }).setView([30.3753, 69.3451], 5); 
+        // Initialize Map
+        var map = L.map('map').setView([33.6844, 73.0479], 12);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         var routingControl, vehicleMarker;
 
-        function showMapScreen() {
-            document.getElementById('homeScreen').classList.add('opacity-0');
-            setTimeout(() => {
-                document.getElementById('homeScreen').classList.add('hidden');
-                const mapScreen = document.getElementById('mapScreen');
-                mapScreen.classList.remove('hidden');
-                setTimeout(() => { map.invalidateSize(); mapScreen.classList.remove('opacity-0'); }, 200); 
-            }, 500);
-        }
-
-        function goBackToHome() {
+        // Reset App to default state
+        function resetApp() {
             if(watchId) navigator.geolocation.clearWatch(watchId);
             if(vehicleMarker) map.removeLayer(vehicleMarker);
             if(routingControl) map.removeControl(routingControl);
             
-            document.getElementById('mapScreen').classList.add('opacity-0');
-            setTimeout(() => {
-                document.getElementById('mapScreen').classList.add('hidden');
-                document.getElementById('homeScreen').classList.remove('hidden');
-                setTimeout(() => document.getElementById('homeScreen').classList.remove('opacity-0'), 50);
-            }, 500);
-            document.getElementById('mainGoBtn').innerHTML = "FIND ROUTE";
+            document.getElementById('journeySection').classList.replace('flex', 'hidden');
+            document.getElementById('inputSection').classList.replace('hidden', 'flex');
+            
+            document.getElementById('mainGoBtn').innerHTML = "Find Route";
             document.getElementById('mainGoBtn').disabled = false;
+            
+            map.setView([33.6844, 73.0479], 12); // Reset view
         }
 
         let isVoiceEnabled = true;
         function toggleVoice() {
             isVoiceEnabled = !isVoiceEnabled;
             const btn = document.getElementById('voiceToggle');
-            if (isVoiceEnabled) { btn.innerHTML = "🔊 Voice: ON"; btn.classList.remove('text-slate-500', 'bg-slate-100'); btn.classList.add('text-blue-600', 'bg-blue-50'); } 
-            else { btn.innerHTML = "🔇 Voice: OFF"; btn.classList.remove('text-blue-600', 'bg-blue-50'); btn.classList.add('text-slate-500', 'bg-slate-100'); window.speechSynthesis.cancel(); }
+            btn.innerHTML = isVoiceEnabled ? "🔊 Voice" : "🔇 Muted";
+            btn.classList.toggle('opacity-50', !isVoiceEnabled);
+            window.speechSynthesis.cancel();
         }
+
         function speakVoice(text) {
             if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel(); 
@@ -160,14 +148,7 @@
             window.speechSynthesis.speak(msg);
         }
 
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = msg;
-            toast.style.backgroundColor = isError ? '#ef4444' : ''; 
-            toast.classList.add('show-toast');
-            setTimeout(() => toast.classList.remove('show-toast'), 3000);
-        }
-
+        // Search Autocomplete Logic
         let searchTimeout;
         async function handleSearch(e, type) {
             clearTimeout(searchTimeout);
@@ -182,18 +163,23 @@
                         suggBox.innerHTML = data.map(item => {
                             const shortName = item.display_name.split(',')[0].replace(/'/g, "\\'");
                             const fullName = item.display_name.replace(/'/g, "\\'");
-                            return `<div class="p-3 border-b border-slate-50 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-slate-700 cursor-pointer flex flex-col" onclick="selectLocation('${type}', '${shortName}')"><span class="font-bold text-sm">${shortName}</span><span class="text-[10px] text-slate-400 truncate">${fullName}</span></div>`}).join('');
+                            return `<div class="p-3 border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex flex-col" onclick="selectLocation('${type}', '${shortName}')"><span class="font-bold text-sm">${shortName}</span><span class="text-[10px] text-slate-500 truncate">${fullName}</span></div>`}).join('');
                         suggBox.classList.remove('hidden');
                     } else { suggBox.classList.add('hidden'); }
                 } catch(err) {}
             }, 500);
         }
-        function selectLocation(type, name) { document.getElementById(type).value = name; document.getElementById(`${type}-suggestions`).classList.add('hidden'); }
+        
+        function selectLocation(type, name) { 
+            document.getElementById(type).value = name; 
+            document.getElementById(`${type}-suggestions`).classList.add('hidden'); 
+        }
         document.getElementById('origin').addEventListener('input', (e) => handleSearch(e, 'origin'));
         document.getElementById('dest').addEventListener('input', (e) => handleSearch(e, 'dest'));
 
         function useMyLocation() {
-            const originInput = document.getElementById('origin'); originInput.value = "Locating... ⏳";
+            const originInput = document.getElementById('origin'); 
+            originInput.value = "Locating... ⏳";
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(async function(position) {
                     var lat = position.coords.latitude; var lon = position.coords.longitude;
@@ -206,18 +192,13 @@
             }
         }
 
-        function createWeatherHTML(data) {
-            let html = `<div class="text-center bg-slate-50 dark:bg-slate-700 rounded-lg p-1.5 min-w-[45px]"><p class="text-[7px] font-bold text-slate-400">NOW</p><p class="text-lg">${data.current_icon}</p><p class="text-[10px] font-black">${data.current_temp}°</p></div>`;
-            data.forecast.slice(0,2).forEach(f => { html += `<div class="text-center p-1.5 min-w-[45px] opacity-60"><p class="text-[7px] font-bold text-slate-400">${f.time}</p><p class="text-lg">${f.icon}</p><p class="text-[10px] font-bold">${f.temp}°</p></div>`; });
-            return html;
-        }
-
+        // Main Route Fetching
         async function checkTraffic() {
             const origin = document.getElementById('origin').value;
             const dest = document.getElementById('dest').value;
             const vehicle = document.getElementById('vehicle').value;
 
-            if(!origin || !dest) { showToast("Enter locations!", true); return; }
+            if(!origin || !dest) { alert("Please enter both locations."); return; }
 
             const mainBtn = document.getElementById('mainGoBtn');
             mainBtn.innerHTML = "Fetching... ⏳"; mainBtn.disabled = true;
@@ -228,76 +209,68 @@
                 const data = await res.json();
 
                 if (data.status === "success") {
-                    document.getElementById('displayOrigin').innerText = origin.split(',')[0].substring(0, 15);
-                    document.getElementById('displayDest').innerText = dest.split(',')[0].substring(0, 15);
-                    showMapScreen();
+                    
+                    // Switch UI State
+                    document.getElementById('inputSection').classList.replace('flex', 'hidden');
+                    document.getElementById('journeySection').classList.replace('hidden', 'flex');
 
+                    // Set Route
                     if(routingControl) map.removeControl(routingControl);
                     if(vehicleMarker) map.removeLayer(vehicleMarker);
 
                     const startBtn = document.getElementById('startBtn');
-                    startBtn.disabled = false; startBtn.innerHTML = "▶ START REAL DRIVE";
-                    startBtn.className = "w-full py-3.5 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl text-sm font-black shadow-lg hover:bg-slate-800 transition tracking-wide";
+                    startBtn.disabled = false; 
+                    startBtn.innerHTML = '▶ START DRIVING';
+                    startBtn.className = "w-full h-14 bg-slate-900 dark:bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition shadow-lg mt-2 active:scale-95";
 
                     routingControl = L.Routing.control({
                         waypoints: [L.latLng(data.origin_coords.lat, data.origin_coords.lon), L.latLng(data.dest_coords.lat, data.dest_coords.lon)],
                         router: L.Routing.osrmv1({ profile: vehicle }),
                         addWaypoints: false, draggableWaypoints: false, show: false,
-                        lineOptions: { styles: [{color: '#3b82f6', opacity: 0.9, weight: 6}] }
+                        fitSelectedRoutes: true, // Auto focus map on line
+                        lineOptions: { styles: [{color: '#2563eb', opacity: 0.9, weight: 6}] }
                     }).addTo(map);
 
                     routingControl.on('routesfound', async function(e) {
                         const route = e.routes[0];
                         const summary = route.summary;
                         
-                        let dist_km = (summary.totalDistance/1000).toFixed(1);
-                        document.getElementById('distText').innerHTML = `${dist_km} <span class="text-[10px] font-normal">km</span>`;
-                        document.getElementById('timeText').innerHTML = `${Math.round(summary.totalTime/60)} <span class="text-[10px] font-normal">min</span>`;
+                        document.getElementById('distText').innerHTML = `${(summary.totalDistance/1000).toFixed(1)} <span class="text-xs font-normal">km</span>`;
+                        document.getElementById('timeText').innerHTML = `${Math.round(summary.totalTime/60)} <span class="text-xs font-normal">min</span>`;
 
                         if(data.hurdle) {
-                            document.getElementById('alertArea').classList.remove('hidden');
-                            document.getElementById('hurdleText').innerText = data.hurdle + " detected!";
-                            speakVoice(`Heads up. Traffic sensor indicates ${data.hurdle} ahead.`);
-                        } else { document.getElementById('alertArea').classList.add('hidden'); }
+                            document.getElementById('alertArea').classList.replace('hidden', 'flex');
+                            document.getElementById('hurdleText').innerText = data.hurdle + " ahead";
+                        } else { document.getElementById('alertArea').classList.replace('flex', 'hidden'); }
 
                         let stepsHtml = "";
-                        route.instructions.forEach((instr, idx) => { stepsHtml += `<div class='flex gap-2 items-start border-b border-slate-50 dark:border-slate-700 pb-1.5'><div class="bg-blue-50 dark:bg-slate-700 text-blue-600 rounded w-4 h-4 flex items-center justify-center text-[8px] font-black shrink-0 mt-0.5">${idx+1}</div><span class="font-medium">${instr.text}</span></div>`; });
+                        route.instructions.forEach((instr, idx) => { 
+                            stepsHtml += `<div class='flex gap-3 items-start border-b border-slate-100 dark:border-slate-700 pb-2'><div class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded w-5 h-5 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">${idx+1}</div><span class="text-xs font-medium text-slate-700 dark:text-slate-300">${instr.text}</span></div>`; 
+                        });
                         document.getElementById('stepsList').innerHTML = stepsHtml;
 
                         startBtn.onclick = () => {
-                            speakVoice(`Starting real-time tracking to ${dest}. Drive safely.`);
+                            speakVoice(`Starting navigation to ${dest}.`);
                             startRealDrive(data.dest_coords.lat, data.dest_coords.lon, vehicle, startBtn);
                         };
-
-                        try {
-                            const [originRes, destRes] = await Promise.all([
-                                fetch(`/get_weather?lat=${data.origin_coords.lat}&lon=${data.origin_coords.lon}`),
-                                fetch(`/get_weather?lat=${data.dest_coords.lat}&lon=${data.dest_coords.lon}`)
-                            ]);
-                            const oData = await originRes.json(), dData = await destRes.json();
-                            if (oData.status === "success") {
-                                document.getElementById('weatherBox').classList.remove('hidden');
-                                document.getElementById('originWeather').innerHTML = createWeatherHTML(oData);
-                                document.getElementById('destWeather').innerHTML = createWeatherHTML(dData);
-                            }
-                        } catch(err) { console.error("Weather Error", err); }
                     });
                 } else {
-                    mainBtn.innerHTML = "FIND ROUTE"; mainBtn.disabled = false;
-                    showToast("Failed to find route.", true);
+                    resetApp();
+                    alert("Failed to find route.");
                 }
             } catch (error) {
-                mainBtn.innerHTML = "FIND ROUTE"; mainBtn.disabled = false;
-                showToast("Server connection failed. Try again!", true);
+                resetApp();
+                alert("Server connection failed.");
             }
         }
 
+        // Live Tracking
         function startRealDrive(destLat, destLon, type, btnElement) {
-            if (!("geolocation" in navigator)) { showToast("Your device doesn't support GPS tracking.", true); return; }
+            if (!("geolocation" in navigator)) { alert("GPS tracking not supported."); return; }
 
             btnElement.disabled = true;
-            btnElement.innerHTML = "<span class='animate-pulse'>🛰️ Real Tracking ON...</span>";
-            btnElement.className = "w-full py-3.5 bg-red-500 text-white rounded-2xl text-sm font-bold shadow-lg shadow-red-500/30 transition tracking-wide";
+            btnElement.innerHTML = "🛰️ TRACKING LIVE";
+            btnElement.className = "w-full h-14 bg-red-500 text-white rounded-xl font-bold text-sm shadow-lg transition mt-2";
 
             const icon = type === 'driving' ? '🚗' : '🏍️';
             const destLatLng = L.latLng(destLat, destLon);
@@ -306,7 +279,7 @@
             watchId = navigator.geolocation.watchPosition(
                 (position) => {
                     let now = Date.now();
-                    if (now - lastUpdateTime < 2500) return; 
+                    if (now - lastUpdateTime < 2000) return; 
                     lastUpdateTime = now;
 
                     let lat = position.coords.latitude;
@@ -314,30 +287,30 @@
                     let currentLatLng = L.latLng(lat, lng);
 
                     if (!vehicleMarker) {
-                        vehicleMarker = L.marker(currentLatLng, { icon: L.divIcon({ html: `<div style="font-size: 32px; filter: drop-shadow(0px 8px 8px rgba(0,0,0,0.5));">${icon}</div>`, className: '' }), zIndexOffset: 1000 }).addTo(map);
+                        vehicleMarker = L.marker(currentLatLng, { icon: L.divIcon({ html: `<div style="font-size: 32px;">${icon}</div>`, className: '' }), zIndexOffset: 1000 }).addTo(map);
                     } else {
                         vehicleMarker.setLatLng(currentLatLng);
                     }
-                    map.panTo(currentLatLng, { animate: false });
+                    
+                    map.panTo(currentLatLng);
 
                     let speedMps = position.coords.speed || 0; 
                     let speedKmh = Math.round(speedMps * 3.6);
-                    document.getElementById('speedText').innerHTML = `${speedKmh} <span class="text-[10px] font-normal">km/h</span>`;
+                    document.getElementById('speedText').innerHTML = `${speedKmh} <span class="text-sm">km/h</span>`;
 
                     let remainingMeters = map.distance(currentLatLng, destLatLng);
                     let remainingKm = (remainingMeters / 1000).toFixed(1);
-                    document.getElementById('distText').innerHTML = `${remainingKm} <span class="text-[10px] font-normal">km</span>`;
+                    document.getElementById('distText').innerHTML = `${remainingKm} <span class="text-xs font-normal">km</span>`;
 
                     if (remainingMeters < 50) {
                         navigator.geolocation.clearWatch(watchId);
-                        document.getElementById('speedText').innerHTML = `0 <span class="text-[10px] font-normal">km/h</span>`;
-                        btnElement.innerText = "✅ Destination Reached";
-                        btnElement.className = "w-full py-3.5 bg-green-500 text-white rounded-2xl text-sm font-black shadow-lg shadow-green-500/30 transition tracking-wide";
-                        speakVoice("You have arrived at your destination.");
-                        showToast("Trip Completed Successfully!");
+                        document.getElementById('speedText').innerHTML = `0 <span class="text-sm">km/h</span>`;
+                        btnElement.innerHTML = "✅ ARRIVED";
+                        btnElement.className = "w-full h-14 bg-green-500 text-white rounded-xl font-bold text-sm shadow-lg transition mt-2";
+                        speakVoice("You have arrived.");
                     }
                 },
-                (error) => { console.log("GPS updating..."); },
+                (error) => {},
                 { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
             );
         }
