@@ -27,7 +27,7 @@ def serve_frontend():
 # ==========================================
 @app.get("/search")
 def search_location(q: str):
-    url = f"https://nominatim.openstreetmap.org/search?format=json&q={q}"
+    url = f"https://nominatim.openstreetmap.org/search?format=json&q={q}&countrycodes=pk&addressdetails=1&limit=8"
     headers = {'User-Agent': 'SafarAsaan/1.0'}
     try:
         response = requests.get(url, headers=headers, timeout=10)
@@ -40,12 +40,12 @@ def search_location(q: str):
 def get_route(origin: str, destination: str):
     headers = {'User-Agent': 'SafarAsaan/1.0'}
     try:
-        # Origin ke coordinates nikalo
-        orig_url = f"https://nominatim.openstreetmap.org/search?format=json&q={origin}"
+        # Origin ke coordinates nikalo (Pakistan mein)
+        orig_url = f"https://nominatim.openstreetmap.org/search?format=json&q={origin}&countrycodes=pk&limit=1"
         orig_res = requests.get(orig_url, headers=headers, timeout=10).json()
         
-        # Destination ke coordinates nikalo
-        dest_url = f"https://nominatim.openstreetmap.org/search?format=json&q={destination}"
+        # Destination ke coordinates nikalo (Pakistan mein)
+        dest_url = f"https://nominatim.openstreetmap.org/search?format=json&q={destination}&countrycodes=pk&limit=1"
         dest_res = requests.get(dest_url, headers=headers, timeout=10).json()
 
         if not orig_res or not dest_res:
